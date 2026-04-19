@@ -369,7 +369,7 @@ def main():
     )
     
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🔧 MELTPOOL CONSTRAINTS")
+    st.sidebar.markdown('<div class="sidebar-section-title">🔧 MELTPOOL CONSTRAINTS</div>', unsafe_allow_html=True)
     
     col_w1, col_w2 = st.sidebar.columns(2)
     with col_w1:
@@ -408,7 +408,7 @@ def main():
         )
     
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### ⚙️ OPTIMIZATION SETTINGS")
+    st.sidebar.markdown('<div class="sidebar-section-title">⚙️ OPTIMIZATION SETTINGS</div>', unsafe_allow_html=True)
     
     n_trials = st.sidebar.slider(
         "Optimization Trials",

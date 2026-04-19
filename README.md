@@ -387,8 +387,8 @@ Mechanical Engineering | Additive Manufacturing | AI Research
 
 If you found this project interesting:
 
-⭐ Star the repository
-🍴 Fork the repo
+⭐ Star the repository <br>
+🍴 Fork the repo<br>
 📢 Share with researchers
 
 ---
