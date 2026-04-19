@@ -127,6 +127,23 @@ st.markdown("""
     .stMarkdown {
         color: #333333 !important;
     }
+
+    /* Streamlit metric text fix */
+    div[data-testid="stMetric"] label {
+        color: #003366 !important;
+        font-weight: 700 !important;
+        opacity: 1 !important;
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: #111111 !important;
+        font-weight: 800 !important;
+    }
+
+    /* Metric delta if shown */
+    div[data-testid="stMetricDelta"] {
+        color: #28a745 !important;
+    }
     
     </style>
     """, unsafe_allow_html=True)
