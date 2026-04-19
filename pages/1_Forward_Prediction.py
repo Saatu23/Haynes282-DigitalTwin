@@ -13,12 +13,22 @@ st.markdown("""
     <style>
     /* Main background */
     .main {
-        background-color: #f8f9fa;
+        background-color: #ffffff;
+    }
+    
+    /* Complete right panel area */
+    [data-testid="stAppViewContainer"] {
+        background-color: #ffffff;
     }
     
     /* Sidebar styling */
     .sidebar .sidebar-content {
         background-color: #f0f2f6;
+    }
+    
+    /* Main content area - right panel */
+    [data-testid="stMainBlockContainer"] {
+        background-color: #ffffff !important;
     }
     
     /* Title styling */
@@ -37,6 +47,17 @@ st.markdown("""
         font-size: 1.1em;
         margin-bottom: 30px;
         font-style: italic;
+    }
+    
+    .sidebar-section-title{
+        color: #ffffff !important;
+        font-size: 1.25rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.8px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        opacity: 1 !important;
+        text-shadow: 0 0 2px rgba(255,255,255,0.15);
     }
     
     /* Metric cards */
@@ -365,7 +386,14 @@ def main():
         return
     
     # Sidebar: Input parameters
-    st.sidebar.markdown("### ⚙️ PROCESS PARAMETERS")
+    st.sidebar.markdown(
+        """
+        <div class="sidebar-section-title">
+            ⚙️ PROCESS PARAMETERS
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     st.sidebar.markdown("---")
     
     power_w = st.sidebar.slider(

@@ -11,7 +11,22 @@ st.markdown("""
     <style>
     /* Main background */
     .main {
-        background-color: #f8f9fa;
+        background-color: #ffffff;
+    }
+    
+    /* Complete right panel area */
+    [data-testid="stAppViewContainer"] {
+        background-color: #ffffff;
+    }
+    
+    /* Sidebar styling */
+    .sidebar .sidebar-content {
+        background-color: #f0f2f6;
+    }
+    
+    /* Main content area - right panel */
+    [data-testid="stMainBlockContainer"] {
+        background-color: #ffffff !important;
     }
     
     /* Title styling */
@@ -30,6 +45,16 @@ st.markdown("""
         font-size: 1.1em;
         margin-bottom: 30px;
         font-style: italic;
+    }
+            
+    .sidebar-section-title{
+        color: #ffffff !important;
+        font-size: 1.25rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.8px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        opacity: 1 !important;
     }
     
     /* Metric cards */
@@ -306,7 +331,14 @@ def main():
         return
     
     # Sidebar: Target specifications
-    st.sidebar.markdown("### 🎯 TARGET SPECIFICATIONS")
+    st.sidebar.markdown(
+        """
+        <div class="sidebar-section-title">
+            🎯 TARGET SPECIFICATIONS
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     st.sidebar.markdown("---")
     
     target_uts = st.sidebar.slider(
@@ -503,11 +535,7 @@ def main():
         defect_mapping = {0: "Lack of Fusion", 1: "Stable", 2: "Keyhole"}
         defect_status = defect_mapping.get(results['DefectClass'], "Unknown")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Predicted Defect Class", defect_status)
-        with col2:
-            st.metric("Defect Risk Score", f"{results['DefectRisk']:.2%}")
+        st.metric("Predicted Defect Class", defect_status)
         
         # SECTION 4: Export Results
         st.markdown('<div class="section-header">📥 EXPORT RESULTS</div>', unsafe_allow_html=True)
