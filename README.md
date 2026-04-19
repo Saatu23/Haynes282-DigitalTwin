@@ -378,7 +378,7 @@ Reduce machine trial costs.
 
 # 👨‍💻 Author
 
-**Satyam Mishra**
+**Satyam Mishra** <br>
 Mechanical Engineering | Additive Manufacturing | AI Research
 
 ---
