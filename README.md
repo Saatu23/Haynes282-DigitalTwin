@@ -84,7 +84,7 @@ The platform takes four LPBF process parameters:
 
 ---
 
-# 🧠 AI Outputs (7 Trained Models)
+# 🧠 AI Outputs (8 Trained Models)
 
 The platform predicts the following outputs instantly:
 
@@ -95,6 +95,7 @@ The platform predicts the following outputs instantly:
 | Strength     | UTS                    |
 | Hardness     | Hardness HRA           |
 | Ductility    | Elongation             |
+| Density      | Relative Density       |
 | Melt Pool    | Width                  |
 | Melt Pool    | Depth                  |
 
@@ -116,16 +117,17 @@ Recommendations / Optimization
 
 # 🤖 Machine Learning Models Used
 
-| File Name             | Purpose                   |
-| --------------------- | ------------------------- |
-| defect_classifier.pkl | Defect classification     |
-| YieldStrength_MPa.pkl | Yield strength prediction |
-| UTS_MPa.pkl           | Ultimate tensile strength |
-| Hardness_HRA.pkl      | Hardness prediction       |
-| Elongation_pct.pkl    | Elongation prediction     |
-| MeltPoolWidth_um.pkl  | Melt pool width           |
-| MeltPoolDepth_um.pkl  | Melt pool depth           |
-| feature_order.pkl     | Input feature order       |
+| File Name               | Purpose                   |
+| ----------------------- | ------------------------- |
+| defect_classifier.pkl   | Defect classification     |
+| YieldStrength_MPa.pkl   | Yield strength prediction |
+| UTS_MPa.pkl             | Ultimate tensile strength |
+| Hardness_HRA.pkl        | Hardness prediction       |
+| Elongation_pct.pkl      | Elongation prediction     |
+| RelativeDensity_frac.pkl| Relative density frac     |
+| MeltPoolWidth_um.pkl    | Melt pool width           |
+| MeltPoolDepth_um.pkl    | Melt pool depth           |
+| feature_order.pkl       | Input feature order       |
 
 ---
 
@@ -251,12 +253,13 @@ View outputs:
 
 The platform predicts:
 
-| Property       | Meaning                           |
-| -------------- | --------------------------------- |
-| Yield Strength | Resistance to plastic deformation |
-| UTS            | Maximum tensile load capacity     |
-| Hardness       | Surface / bulk hardness           |
-| Elongation     | Ductility before fracture         |
+| Property          | Meaning                           |
+| ----------------- | --------------------------------- |
+| Yield Strength    | Resistance to plastic deformation |
+| UTS               | Maximum tensile load capacity     |
+| Hardness          | Surface / bulk hardness           |
+| Elongation        | Ductility before fracture         |
+| Relative Density  | Fraction of theoretical density   |
 
 ---
 
