@@ -219,6 +219,7 @@ def load_models():
             'UTS_MPa': joblib.load(MODEL_DIR / 'UTS_MPa.pkl'),
             'Hardness_HRA': joblib.load(MODEL_DIR / 'Hardness_HRA.pkl'),
             'Elongation_pct': joblib.load(MODEL_DIR / 'Elongation_pct.pkl'),
+            'RelativeDensity_frac': joblib.load(MODEL_DIR / 'RelativeDensity_frac.pkl'),
         }
         
         # Load feature order
@@ -230,7 +231,7 @@ def load_models():
         return None, None
 
 def predict_all(models, feature_order, input_data):
-    """Run all 7 models and return predictions."""
+    """Run all 8 models and return predictions."""
     try:
         # Reorder features according to model training
         X = input_data[feature_order].copy()
@@ -243,6 +244,7 @@ def predict_all(models, feature_order, input_data):
             'UTS_MPa': float(models['UTS_MPa'].predict(X)[0]),
             'Hardness_HRA': float(models['Hardness_HRA'].predict(X)[0]),
             'Elongation_pct': float(models['Elongation_pct'].predict(X)[0]),
+            'RelativeDensity_frac': float(models['RelativeDensity_frac'].predict(X)[0]),
         }
         
         return predictions
@@ -332,12 +334,13 @@ def get_recommendation(defect_class):
     else:  # Stable
         return "✅ **Stable Processing Conditions**\n\nYour parameters are within the optimal process window. This is an excellent region for consistent, high-quality prints with:\n- Good melt pool geometry\n- Minimal defects\n- Predictable mechanical properties"
 
-def show_metric_card(label, value, unit=""):
+def show_metric_card(label, value, unit="", decimals=2):
     """Display a metric card."""
+    formatted_value = f"{value:.{decimals}f}"
     st.markdown(f"""
         <div class="metric-card">
             <div class="metric-label">{label}</div>
-            <div class="metric-value">{value:.2f} {unit}</div>
+            <div class="metric-value">{formatted_value} {unit}</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -367,9 +370,13 @@ def export_to_csv(input_params, predictions):
         'UTS_MPa': [predictions['UTS_MPa']],
         'Hardness_HRA': [predictions['Hardness_HRA']],
         'Elongation_pct': [predictions['Elongation_pct']],
+        'RelativeDensity_pct': [predictions['RelativeDensity_frac'] * 100],
     }
     
     df = pd.DataFrame(export_data)
+    # Format Relative Density to 6 decimal places
+    if 'RelativeDensity_pct' in df.columns:
+        df['RelativeDensity_pct'] = df['RelativeDensity_pct'].apply(lambda x: f"{x:.6f}")
     return df.to_csv(index=False).encode('utf-8')
 
 # Main app
@@ -521,7 +528,7 @@ def main():
         # Mechanical Properties
         st.markdown('<div class="section-header">💪 MECHANICAL PROPERTIES</div>', unsafe_allow_html=True)
         
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
             show_metric_card("Yield Strength", predictions['YieldStrength_MPa'], "MPa")
         with col2:
@@ -530,6 +537,8 @@ def main():
             show_metric_card("Hardness", predictions['Hardness_HRA'], "HRA")
         with col4:
             show_metric_card("Elongation", predictions['Elongation_pct'], "%")
+        with col5:
+            show_metric_card("Relative Density", predictions['RelativeDensity_frac'] * 100, "%", decimals=6)
         
         # # Mechanical Properties Comparison Chart
         # st.markdown('<div class="section-header">📈 PROPERTIES COMPARISON</div>', unsafe_allow_html=True)
@@ -608,7 +617,7 @@ def main():
                 - Defect Classification
                 
                 **Mechanical Properties:**
-                - Yield Strength, UTS, Hardness, Elongation
+                - Yield Strength, UTS, Hardness, Elongation, Relative Density
                 
                 #### How to use:
                 1. Adjust process parameters in the sidebar (Power, Scan Speed, Hatch Spacing, Layer Thickness)
