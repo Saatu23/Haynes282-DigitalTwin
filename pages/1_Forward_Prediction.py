@@ -243,7 +243,7 @@ def predict_all(models, feature_order, input_data):
             'YieldStrength_MPa': float(models['YieldStrength_MPa'].predict(X)[0]),
             'UTS_MPa': float(models['UTS_MPa'].predict(X)[0]),
             'Hardness_HRA': float(models['Hardness_HRA'].predict(X)[0]),
-            'Elongation_pct': float(models['Elongation_pct'].predict(X)[0]),
+            # 'Elongation_pct': float(models['Elongation_pct'].predict(X)[0]),
             'RelativeDensity_frac': float(models['RelativeDensity_frac'].predict(X)[0]),
         }
         
@@ -311,16 +311,16 @@ def calculate_quality_score(predictions):
     
     score += ys_score + uts_score
     
-    # ---------------------------------
-    # 4. DUCTILITY SCORE (10 points)
-    # ---------------------------------
-    # Gaussian penalty around optimal 18% elongation
-    elong = predictions["Elongation_pct"]
+    # # ---------------------------------
+    # # 4. DUCTILITY SCORE (10 points)
+    # # ---------------------------------
+    # # Gaussian penalty around optimal 18% elongation
+    # elong = predictions["Elongation_pct"]
     
-    # 10 points at 18%, decays with deviation (coefficient 1.2)
-    elong_score = max(0, 10 - abs(elong - 18) * 1.2)
+    # # 10 points at 18%, decays with deviation (coefficient 1.2)
+    # elong_score = max(0, 10 - abs(elong - 18) * 1.2)
     
-    score += elong_score
+    # score += elong_score
     score = round(score)
     # Return final score (0-100)
     return round(min(100, score), 1)
@@ -328,11 +328,11 @@ def calculate_quality_score(predictions):
 def get_recommendation(defect_class):
     """Get recommendation based on defect class."""
     if defect_class == 0:  # Lack of Fusion
-        return "⚠️ **Lack of Fusion Detected**\n\nTo improve print quality:\n- **Increase Power** (W) to enhance melt pool penetration\n- **Reduce Scan Speed** (mm/s) to allow longer dwell time"
+        return "**Lack of Fusion Detected**\n\nTo improve print quality:\n- **Increase Power** (W) to enhance melt pool penetration\n- **Reduce Scan Speed** (mm/s) to allow longer dwell time"
     elif defect_class == 2:  # Keyhole
-        return "⚠️ **Keyhole Defect Detected**\n\nTo improve print quality:\n- **Reduce Power** (W) to prevent excessive vaporization\n- **Increase Scan Speed** (mm/s) to reduce dwell time"
+        return "**Keyhole Defect Detected**\n\nTo improve print quality:\n- **Reduce Power** (W) to prevent excessive vaporization\n- **Increase Scan Speed** (mm/s) to reduce dwell time"
     else:  # Stable
-        return "✅ **Stable Processing Conditions**\n\nYour parameters are within the optimal process window. This is an excellent region for consistent, high-quality prints with:\n- Good melt pool geometry\n- Minimal defects\n- Predictable mechanical properties"
+        return "**Stable Processing Conditions**\n\nYour parameters are within the optimal process window. This is an excellent region for consistent, high-quality prints with:\n- Good melt pool geometry\n- Minimal defects\n- Predictable mechanical properties"
 
 def show_metric_card(label, value, unit="", decimals=2):
     """Display a metric card."""
@@ -369,7 +369,7 @@ def export_to_csv(input_params, predictions):
         'YieldStrength_MPa': [predictions['YieldStrength_MPa']],
         'UTS_MPa': [predictions['UTS_MPa']],
         'Hardness_HRA': [predictions['Hardness_HRA']],
-        'Elongation_pct': [predictions['Elongation_pct']],
+        # 'Elongation_pct': [predictions['Elongation_pct']],
         'RelativeDensity_pct': [predictions['RelativeDensity_frac'] * 100],
     }
     
@@ -382,7 +382,7 @@ def export_to_csv(input_params, predictions):
 # Main app
 def main():
     # Header
-    st.markdown('<div class="title-main">🔬 HAYNES 282 DIGITAL TWIN</div>', unsafe_allow_html=True)
+    st.markdown('<div class="title-main">HAYNES 282 DIGITAL TWIN</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitle">LPBF Process Parameter Intelligence Platform</div>', unsafe_allow_html=True)
     
     # Load models
@@ -396,7 +396,7 @@ def main():
     st.sidebar.markdown(
         """
         <div class="sidebar-section-title">
-            ⚙️ PROCESS PARAMETERS
+            PROCESS PARAMETERS
         </div>
         """,
         unsafe_allow_html=True
@@ -423,11 +423,11 @@ def main():
     
     hatch_spacing = st.sidebar.slider(
         "Hatch Spacing (mm)",
-        min_value=0.09,
+        min_value=0.07,
         max_value=0.12,
         value=0.10,
-        step=0.01,
-        format="%.2f",
+        step=0.005,
+        format="%.3f",
         help="Distance between hatch lines in mm"
     )
     
@@ -444,7 +444,7 @@ def main():
     st.sidebar.markdown("---")
     
     # Predict button
-    predict_clicked = st.sidebar.button("🔮 PREDICT", use_container_width=True)
+    predict_clicked = st.sidebar.button("PREDICT", use_container_width=True)
     
     # Prepare input data with exact training feature names
     input_params = {
@@ -474,7 +474,7 @@ def main():
         quality_score = st.session_state.forward_quality_score
         
         # Quality score gauge
-        st.markdown('<div class="section-header">📊 PROCESS QUALITY ASSESSMENT</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">PROCESS QUALITY ASSESSMENT</div>', unsafe_allow_html=True)
         
         col1, col2 = st.columns([2, 1])
         
@@ -513,7 +513,7 @@ def main():
                 show_metric_card("Process", predictions['DefectClass'], "")
         
         # Meltpool Geometry
-        st.markdown('<div class="section-header">🌡️ MELTPOOL GEOMETRY</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">MELTPOOL GEOMETRY</div>', unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         with col1:
@@ -522,22 +522,30 @@ def main():
             show_metric_card("Melt Pool Depth", predictions['MeltPoolDepth_um'], "µm")
         
         # Defect Status
-        st.markdown('<div class="section-header">⚠️ DEFECT STATUS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">DEFECT STATUS</div>', unsafe_allow_html=True)
         create_defect_badge(predictions['DefectClass'])
         
         # Mechanical Properties
-        st.markdown('<div class="section-header">💪 MECHANICAL PROPERTIES</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">MECHANICAL PROPERTIES</div>', unsafe_allow_html=True)
         
-        col1, col2, col3, col4, col5 = st.columns(5)
+        # col1, col2 = st.columns(2)
+
+        # with col1:
+        #     show_metric_card("Hardness", predictions['Hardness_HRA'], "HRA")
+
+        # with col2:
+        #     show_metric_card("Relative Density", predictions['RelativeDensity_frac'] * 100, "%", decimals=6)
+
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             show_metric_card("Yield Strength", predictions['YieldStrength_MPa'], "MPa")
         with col2:
             show_metric_card("UTS", predictions['UTS_MPa'], "MPa")
         with col3:
             show_metric_card("Hardness", predictions['Hardness_HRA'], "HRA")
+        # with col4:
+        #     show_metric_card("Elongation", predictions['Elongation_pct'], "%")
         with col4:
-            show_metric_card("Elongation", predictions['Elongation_pct'], "%")
-        with col5:
             show_metric_card("Relative Density", predictions['RelativeDensity_frac'] * 100, "%", decimals=6)
         
         # # Mechanical Properties Comparison Chart
@@ -571,16 +579,16 @@ def main():
         
         # Recommendation
         st.markdown('<div class="recommendation-box">', unsafe_allow_html=True)
-        st.markdown(f'<div class="recommendation-title">💡 RECOMMENDATION</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="recommendation-title">RECOMMENDATION</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="recommendation-text">{get_recommendation(predictions["DefectClass"])}</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Export section
-        st.markdown('<div class="section-header">📥 EXPORT RESULTS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">EXPORT RESULTS</div>', unsafe_allow_html=True)
         
         csv_data = export_to_csv(st.session_state.forward_input_params, predictions)
         st.download_button(
-            label="📥 Download Prediction Report (CSV)",
+            label="Download Prediction Report (CSV)",
             data=csv_data,
             file_name=f"HAYNES282_Prediction_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             mime="text/csv",
@@ -588,7 +596,7 @@ def main():
         )
         
         # Input parameters summary
-        st.markdown('<div class="section-header">📋 INPUT PARAMETERS USED</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">INPUT PARAMETERS USED</div>', unsafe_allow_html=True)
         
         # Map technical names to user-friendly labels
         params_display = {
@@ -606,7 +614,7 @@ def main():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("""
-                ### 👋 Welcome to HAYNES 282 Digital Twin
+                ### Welcome to HAYNES 282 Digital Twin
                 
                 This platform uses advanced machine learning models trained on LPBF experimental data to predict:
                 
@@ -616,8 +624,9 @@ def main():
                 **Quality:**
                 - Defect Classification
                 
-                **Mechanical Properties:**
-                - Yield Strength, UTS, Hardness, Elongation, Relative Density
+                **Material Properties:**
+                - Hardness
+                - Relative Density
                 
                 #### How to use:
                 1. Adjust process parameters in the sidebar (Power, Scan Speed, Hatch Spacing, Layer Thickness)

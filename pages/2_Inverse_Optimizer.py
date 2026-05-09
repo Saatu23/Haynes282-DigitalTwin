@@ -163,7 +163,8 @@ def load_models():
             'Hardness_HRA': joblib.load(MODEL_DIR / 'Hardness_HRA.pkl'),
             'MeltPoolDepth_um': joblib.load(MODEL_DIR / 'MeltPoolDepth_um.pkl'),
             'MeltPoolWidth_um': joblib.load(MODEL_DIR / 'MeltPoolWidth_um.pkl'),
-            'Elongation_pct': joblib.load(MODEL_DIR / 'Elongation_pct.pkl'),
+            'RelativeDensity_frac': joblib.load(MODEL_DIR / 'RelativeDensity_frac.pkl'),
+            # 'Elongation_pct': joblib.load(MODEL_DIR / 'Elongation_pct.pkl'),
         }
         
         feature_order = joblib.load(MODEL_DIR / 'feature_order.pkl')
@@ -211,7 +212,8 @@ def objective(trial, models, feature_order, config):
         hard = float(models['Hardness_HRA'].predict(X)[0])
         depth = float(models['MeltPoolDepth_um'].predict(X)[0])
         width = float(models['MeltPoolWidth_um'].predict(X)[0])
-        elong = float(models['Elongation_pct'].predict(X)[0])
+        density = float(models['RelativeDensity_frac'].predict(X)[0]) * 100
+        # elong = float(models['Elongation_pct'].predict(X)[0])
         
         # Scoring logic (weighted for target optimization)
         score = 0
@@ -219,8 +221,10 @@ def objective(trial, models, feature_order, config):
         # Base properties
         score += uts * 1.0
         score += ys * 0.8
-        score += hard * 5
-        score += elong * 25
+        # score += hard * 5
+        # score += elong * 25
+        score -= abs(hard - config['target_hardness']) * 20
+        score -= abs(density - config['target_density']) * 40
         
         # Defect penalty
         score -= defect_risk * 1500
@@ -232,8 +236,8 @@ def objective(trial, models, feature_order, config):
         if ys < config['target_ys']:
             score -= (config['target_ys'] - ys) * 8
         
-        if elong < config['min_elong']:
-            score -= (config['min_elong'] - elong) * 100
+        # if elong < config['min_elong']:
+        #     score -= (config['min_elong'] - elong) * 100
         
         # Meltpool constraints
         if depth < config['min_depth']:
@@ -270,7 +274,8 @@ def evaluate_parameters(P_W, v_mm_per_s, h_mm, t_mm, models, feature_order):
         'YieldStrength_MPa': float(models['YieldStrength_MPa'].predict(X)[0]),
         'UTS_MPa': float(models['UTS_MPa'].predict(X)[0]),
         'Hardness_HRA': float(models['Hardness_HRA'].predict(X)[0]),
-        'Elongation_pct': float(models['Elongation_pct'].predict(X)[0]),
+        # 'Elongation_pct': float(models['Elongation_pct'].predict(X)[0]),
+        'RelativeDensity_pct': float(models['RelativeDensity_frac'].predict(X)[0]) * 100,
         'MeltPoolWidth_um': float(models['MeltPoolWidth_um'].predict(X)[0]),
         'MeltPoolDepth_um': float(models['MeltPoolDepth_um'].predict(X)[0]),
         'DefectClass': defect_class,
@@ -298,12 +303,12 @@ def calculate_verdict(results, config):
     else:
         score += 5
     
-    if results['Elongation_pct'] >= config['min_elong']:
-        score += 20
-    elif results['Elongation_pct'] >= config['min_elong'] - 2:
-        score += 10
-    else:
-        score += 5
+    # if results['Elongation_pct'] >= config['min_elong']:
+    #     score += 20
+    # elif results['Elongation_pct'] >= config['min_elong'] - 2:
+    #     score += 10
+    # else:
+    #     score += 5
     
     # Defect check
     if results['DefectClass'] == 1:  # Stable
@@ -313,6 +318,14 @@ def calculate_verdict(results, config):
     else:  # Keyhole
         score -= 20
     
+    # Relative density target check
+    if abs(results['RelativeDensity_pct'] - config['target_density']) <= 0.3:
+        score += 40
+    elif abs(results['RelativeDensity_pct'] - config['target_density']) <= 1.0:
+        score += 25
+    else:
+        score += 10
+        
     # Meltpool check
     if (config['min_width'] <= results['MeltPoolWidth_um'] <= config['max_width'] and
         config['min_depth'] <= results['MeltPoolDepth_um'] <= config['max_depth']):
@@ -337,7 +350,7 @@ def show_metric_card(label, value, unit=""):
 # Main app
 def main():
     # Header
-    st.markdown('<div class="title-main">🎯 INVERSE OPTIMIZER</div>', unsafe_allow_html=True)
+    st.markdown('<div class="title-main">INVERSE OPTIMIZER</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitle">Automated LPBF Parameter Design for Target Properties</div>', unsafe_allow_html=True)
     
     # Load models
@@ -351,7 +364,7 @@ def main():
     st.sidebar.markdown(
         """
         <div class="sidebar-section-title">
-            🎯 TARGET SPECIFICATIONS
+            TARGET SPECIFICATIONS
         </div>
         """,
         unsafe_allow_html=True
@@ -375,18 +388,36 @@ def main():
         step=10,
         help="Desired Yield Strength"
     )
-    
-    min_elong = st.sidebar.slider(
-        "Minimum Elongation (%)",
-        min_value=5.0,
-        max_value=25.0,
-        value=15.0,
+
+    target_hardness = st.sidebar.slider(
+        "Target Hardness (HRA)",
+        min_value=30.0,
+        max_value=70.0,
+        value=45.0,
         step=0.5,
-        help="Minimum acceptable elongation"
+        help="Desired hardness"
+    )
+
+    target_density = st.sidebar.slider(
+        "Target Relative Density (%)",
+        min_value=95.0,
+        max_value=100.0,
+        value=99.5,
+        step=0.01,
+        help="Desired relative density"
     )
     
+    # min_elong = st.sidebar.slider(
+    #     "Minimum Elongation (%)",
+    #     min_value=5.0,
+    #     max_value=25.0,
+    #     value=15.0,
+    #     step=0.5,
+    #     help="Minimum acceptable elongation"
+    # )
+    
     st.sidebar.markdown("---")
-    st.sidebar.markdown('<div class="sidebar-section-title">🔧 MELTPOOL CONSTRAINTS</div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div class="sidebar-section-title">MELTPOOL CONSTRAINTS</div>', unsafe_allow_html=True)
     
     col_w1, col_w2 = st.sidebar.columns(2)
     with col_w1:
@@ -425,7 +456,7 @@ def main():
         )
     
     st.sidebar.markdown("---")
-    st.sidebar.markdown('<div class="sidebar-section-title">⚙️ OPTIMIZATION SETTINGS</div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div class="sidebar-section-title">OPTIMIZATION SETTINGS</div>', unsafe_allow_html=True)
     
     n_trials = st.sidebar.slider(
         "Optimization Trials",
@@ -439,13 +470,15 @@ def main():
     st.sidebar.markdown("---")
     
     # Optimize button
-    optimize_clicked = st.sidebar.button("🚀 RUN OPTIMIZATION", use_container_width=True)
+    optimize_clicked = st.sidebar.button("RUN OPTIMIZATION", use_container_width=True)
     
     # Configuration
     config = {
         'target_uts': target_uts,
         'target_ys': target_ys,
-        'min_elong': min_elong,
+        # 'min_elong': min_elong,
+        'target_hardness': target_hardness,
+        'target_density': target_density,
         'min_width': min_width,
         'max_width': max_width,
         'min_depth': min_depth,
@@ -505,7 +538,7 @@ def main():
         verdict, verdict_color = calculate_verdict(results, config)
         
         # SECTION 1: Recommended Parameters
-        st.markdown('<div class="section-header">⚡ RECOMMENDED PARAMETERS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">RECOMMENDED PARAMETERS</div>', unsafe_allow_html=True)
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -518,7 +551,7 @@ def main():
             show_metric_card("Layer Thickness", best_params['t_mm'], "mm")
         
         # SECTION 2: Predicted Performance
-        st.markdown('<div class="section-header">📊 PREDICTED PERFORMANCE</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">PREDICTED PERFORMANCE</div>', unsafe_allow_html=True)
         
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -530,14 +563,25 @@ def main():
         
         col1, col2, col3 = st.columns(3)
         with col1:
-            show_metric_card("Elongation", results['Elongation_pct'], "%")
+            show_metric_card("Relative Density", results['RelativeDensity_pct'], "%")
         with col2:
             show_metric_card("Meltpool Width", results['MeltPoolWidth_um'], "µm")
         with col3:
             show_metric_card("Meltpool Depth", results['MeltPoolDepth_um'], "µm")
         
+        # col1, col2, col3 = st.columns(3)
+
+        # with col1:
+        #     show_metric_card("Hardness", results['Hardness_HRA'], "HRA")
+
+        # with col2:
+        #     show_metric_card("Meltpool Width", results['MeltPoolWidth_um'], "µm")
+
+        # with col3:
+        #     show_metric_card("Meltpool Depth", results['MeltPoolDepth_um'], "µm")
+
         # SECTION 3: Quality Verdict
-        st.markdown('<div class="section-header">✅ QUALITY VERDICT</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">QUALITY VERDICT</div>', unsafe_allow_html=True)
         
         verdict_class = "verdict-excellent" if verdict == "Excellent" else ("verdict-good" if verdict == "Good" else "verdict-moderate")
         
@@ -555,7 +599,7 @@ def main():
         st.metric("Predicted Defect Class", defect_status)
         
         # SECTION 4: Export Results
-        st.markdown('<div class="section-header">📥 EXPORT RESULTS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">EXPORT RESULTS</div>', unsafe_allow_html=True)
         
         # Create export dataframe
         export_data = {
@@ -567,7 +611,8 @@ def main():
             'YieldStrength_MPa': [results['YieldStrength_MPa']],
             'UTS_MPa': [results['UTS_MPa']],
             'Hardness_HRA': [results['Hardness_HRA']],
-            'Elongation_pct': [results['Elongation_pct']],
+            'RelativeDensity_pct': [results['RelativeDensity_pct']],
+            # 'Elongation_pct': [results['Elongation_pct']],
             'MeltPoolWidth_um': [results['MeltPoolWidth_um']],
             'MeltPoolDepth_um': [results['MeltPoolDepth_um']],
             'DefectClass': [defect_status],
@@ -579,7 +624,7 @@ def main():
         csv_data = export_df.to_csv(index=False).encode('utf-8')
         
         st.download_button(
-            label="📥 Download Optimization Report (CSV)",
+            label="Download Optimization Report (CSV)",
             data=csv_data,
             file_name=f"HAYNES282_InverseOptimization_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             mime="text/csv",
@@ -587,7 +632,7 @@ def main():
         )
         
         # Optimization details
-        st.markdown('<div class="section-header">📈 OPTIMIZATION DETAILS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">OPTIMIZATION DETAILS</div>', unsafe_allow_html=True)
         
         trials_df = st.session_state.inverse_study.trials_dataframe()
         
@@ -611,7 +656,7 @@ def main():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("""
-                ### 👋 Welcome to Inverse Optimizer
+                ### Welcome to Inverse Optimizer
                 
                 This tool uses intelligent parameter search to find LPBF process conditions
                 that achieve your desired material properties.
